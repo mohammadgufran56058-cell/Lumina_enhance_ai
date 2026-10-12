@@ -51,6 +51,8 @@
     <p>Upload your photo to get started.</p>
     <input type="file" id="photo" accept="image/*">
     <img id="preview" hidden alt="Your photo preview">
+    <label for="brightness">Brightness</label>
+<input type="range" id="brightness" min="50" max="200" value="100">
     <button onclick="showPhoto()">Preview Photo</button>
     <p id="message"></p>
   </div>
@@ -67,7 +69,14 @@
 
       preview.src = URL.createObjectURL(file);
       preview.hidden = false;
+      
+preview.style.filter = `brightness(${document.getElementById('brightness').value}%)`;
+      
       message.textContent = 'Photo loaded successfully!';
+      
+document.getElementById('brightness').oninput = function() {
+  preview.style.filter = `brightness(${this.value}%)`;
+};
     }
   </script>
 </body>
