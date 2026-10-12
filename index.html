@@ -1,0 +1,75 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumina AI Photo Enhancer</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 30px 15px;
+      background: #101522;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    .app {
+      max-width: 450px;
+      margin: 40px auto;
+      padding: 25px;
+      background: #1c2638;
+      border-radius: 20px;
+    }
+    h1 { color: #70e1b5; }
+    p { color: #c5cede; }
+    input, button {
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 15px;
+      padding: 14px;
+      border-radius: 10px;
+    }
+    button {
+      border: 0;
+      background: #70e1b5;
+      color: #101522;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    img {
+      max-width: 100%;
+      margin-top: 20px;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>Lumina AI ✨</h1>
+    <h2>Photo Enhancer</h2>
+    <p>Upload your photo to get started.</p>
+    <input type="file" id="photo" accept="image/*">
+    <img id="preview" hidden alt="Your photo preview">
+    <button onclick="showPhoto()">Preview Photo</button>
+    <p id="message"></p>
+  </div>
+  <script>
+    function showPhoto() {
+      const file = document.getElementById('photo').files[0];
+      const preview = document.getElementById('preview');
+      const message = document.getElementById('message');
+
+      if (!file) {
+        message.textContent = 'Please select a photo first.';
+        return;
+      }
+
+      preview.src = URL.createObjectURL(file);
+      preview.hidden = false;
+      message.textContent = 'Photo loaded successfully!';
+    }
+  </script>
+</body>
+  </html>
+  
