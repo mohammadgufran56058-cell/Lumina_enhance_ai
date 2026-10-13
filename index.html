@@ -51,6 +51,11 @@
             color: white;
             margin-top: 10px;
         }
+        .auto-btn {
+            background: #a855f7;
+            color: white;
+            margin-top: 10px;
+        }
         .danger-btn {
             background: #ef4444;
             color: white;
@@ -97,6 +102,8 @@
         <label for="blur">Blur</label>
         <input type="range" id="blur" min="0" max="10" value="0">
 
+        <button class="auto-btn" onclick="autoEnhance()">Auto Enhance ✨</button>
+
         <div class="group">
             <button class="secondary-btn" onclick="rotateLeft()">Rotate Left</button>
             <button class="secondary-btn" onclick="rotateRight()">Rotate Right</button>
@@ -141,7 +148,6 @@
         }
 
         function updateStyles() {
-            // Using contrast & saturate boost along with standard filters to simulate advanced sharpening/clarity
             const sharpenVal = sharpenInput.value;
             preview.style.filter = `
                 brightness(${brightnessInput.value}%) 
@@ -152,6 +158,17 @@
                 blur(${blurInput.value}px)
             `;
             preview.style.transform = `rotate(${rotation}deg) scaleX(${flipX}) scaleY(${flipY})`;
+        }
+
+        function autoEnhance() {
+            brightnessInput.value = 110;
+            contrastInput.value = 125;
+            saturationInput.value = 115;
+            sharpenInput.value = 130;
+            grayscaleInput.value = 0;
+            blurInput.value = 0;
+            updateStyles();
+            message.textContent = 'Auto-enhanced applied!';
         }
 
         function rotateLeft() {
@@ -248,3 +265,8 @@
     </script>
 </body>
 </html>
+
+        
+        
+                
+                
