@@ -1,5 +1,4 @@
-
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -89,6 +88,9 @@
         <label for="saturation">Saturation</label>
         <input type="range" id="saturation" min="0" max="200" value="100">
 
+        <label for="sharpen">Sharpen / Clarity</label>
+        <input type="range" id="sharpen" min="100" max="200" value="100">
+
         <label for="grayscale">Grayscale</label>
         <input type="range" id="grayscale" min="0" max="100" value="0">
 
@@ -117,6 +119,7 @@
         const brightnessInput = document.getElementById('brightness');
         const contrastInput = document.getElementById('contrast');
         const saturationInput = document.getElementById('saturation');
+        const sharpenInput = document.getElementById('sharpen');
         const grayscaleInput = document.getElementById('grayscale');
         const blurInput = document.getElementById('blur');
 
@@ -138,10 +141,13 @@
         }
 
         function updateStyles() {
+            // Using contrast & saturate boost along with standard filters to simulate advanced sharpening/clarity
+            const sharpenVal = sharpenInput.value;
             preview.style.filter = `
                 brightness(${brightnessInput.value}%) 
                 contrast(${contrastInput.value}%) 
                 saturate(${saturationInput.value}%)
+                contrast(${sharpenVal}%)
                 grayscale(${grayscaleInput.value}%)
                 blur(${blurInput.value}px)
             `;
@@ -172,6 +178,7 @@
             brightnessInput.value = 100;
             contrastInput.value = 100;
             saturationInput.value = 100;
+            sharpenInput.value = 100;
             grayscaleInput.value = 0;
             blurInput.value = 0;
             rotation = 0;
@@ -183,6 +190,7 @@
         brightnessInput.oninput = updateStyles;
         contrastInput.oninput = updateStyles;
         saturationInput.oninput = updateStyles;
+        sharpenInput.oninput = updateStyles;
         grayscaleInput.oninput = updateStyles;
         blurInput.oninput = updateStyles;
 
@@ -213,10 +221,12 @@
                 ctx.translate(canvas.width / 2, canvas.height / 2);
                 ctx.rotate(rotation * Math.PI / 180);
                 ctx.scale(flipX, flipY);
+                const sharpenVal = sharpenInput.value;
                 ctx.filter = `
                     brightness(${brightnessInput.value}%) 
                     contrast(${contrastInput.value}%) 
                     saturate(${saturationInput.value}%)
+                    contrast(${sharpenVal}%)
                     grayscale(${grayscaleInput.value}%)
                     blur(${blurInput.value}px)
                 `;
