@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+
+    <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -46,10 +47,28 @@
             margin-top: 15px;
             cursor: pointer;
         }
+        .secondary-btn {
+            background: #3b82f6;
+            color: white;
+            margin-top: 10px;
+        }
+        .danger-btn {
+            background: #ef4444;
+            color: white;
+            margin-top: 10px;
+        }
+        .group {
+            display: flex;
+            gap: 10px;
+        }
+        .group button {
+            width: 50%;
+        }
         img {
             max-width: 100%;
             margin-top: 20px;
             border-radius: 12px;
+            transition: transform 0.2s;
         }
     </style>
 </head>
@@ -70,8 +89,24 @@
         <label for="saturation">Saturation</label>
         <input type="range" id="saturation" min="0" max="200" value="100">
 
-        <button onclick="showPhoto()">Preview Photo</button>
-        <button onclick="downloadImage()" style="background: #4ade80;">Download Photo</button>
+        <label for="grayscale">Grayscale</label>
+        <input type="range" id="grayscale" min="0" max="100" value="0">
+
+        <label for="blur">Blur</label>
+        <input type="range" id="blur" min="0" max="10" value="0">
+
+        <div class="group">
+            <button class="secondary-btn" onclick="rotateLeft()">Rotate Left</button>
+            <button class="secondary-btn" onclick="rotateRight()">Rotate Right</button>
+        </div>
+
+        <div class="group">
+            <button class="secondary-btn" onclick="flipHorizontal()">Flip X</button>
+            <button class="secondary-btn" onclick="flipVertical()">Flip Y</button>
+        </div>
+
+        <button class="danger-btn" onclick="resetAll()">Reset Adjustments</button>
+        <button onclick="downloadImage()" style="background: #4ade80; color: #101522;">Download Photo</button>
         <p id="message"></p>
     </div>
 
@@ -82,6 +117,12 @@
         const brightnessInput = document.getElementById('brightness');
         const contrastInput = document.getElementById('contrast');
         const saturationInput = document.getElementById('saturation');
+        const grayscaleInput = document.getElementById('grayscale');
+        const blurInput = document.getElementById('blur');
+
+        let rotation = 0;
+        let flipX = 1;
+        let flipY = 1;
 
         function showPhoto() {
             const file = fileInput.files[0];
@@ -92,21 +133,60 @@
 
             preview.src = URL.createObjectURL(file);
             preview.hidden = false;
-            updateFilters();
+            resetAll();
             message.textContent = 'Photo loaded successfully!';
         }
 
-        function updateFilters() {
+        function updateStyles() {
             preview.style.filter = `
                 brightness(${brightnessInput.value}%) 
                 contrast(${contrastInput.value}%) 
                 saturate(${saturationInput.value}%)
+                grayscale(${grayscaleInput.value}%)
+                blur(${blurInput.value}px)
             `;
+            preview.style.transform = `rotate(${rotation}deg) scaleX(${flipX}) scaleY(${flipY})`;
         }
 
-        brightnessInput.oninput = updateFilters;
-        contrastInput.oninput = updateFilters;
-        saturationInput.oninput = updateFilters;
+        function rotateLeft() {
+            rotation -= 90;
+            updateStyles();
+        }
+
+        function rotateRight() {
+            rotation += 90;
+            updateStyles();
+        }
+
+        function flipHorizontal() {
+            flipX *= -1;
+            updateStyles();
+        }
+
+        function flipVertical() {
+            flipY *= -1;
+            updateStyles();
+        }
+
+        function resetAll() {
+            brightnessInput.value = 100;
+            contrastInput.value = 100;
+            saturationInput.value = 100;
+            grayscaleInput.value = 0;
+            blurInput.value = 0;
+            rotation = 0;
+            flipX = 1;
+            flipY = 1;
+            updateStyles();
+        }
+
+        brightnessInput.oninput = updateStyles;
+        contrastInput.oninput = updateStyles;
+        saturationInput.oninput = updateStyles;
+        grayscaleInput.oninput = updateStyles;
+        blurInput.oninput = updateStyles;
+
+        fileInput.addEventListener('change', showPhoto);
 
         function downloadImage() {
             const file = fileInput.files[0];
@@ -121,18 +201,34 @@
 
             img.src = preview.src;
             img.onload = function() {
-                canvas.width = img.naturalWidth;
-                canvas.height = img.naturalHeight;
+                if (rotation % 180 !== 0) {
+                    canvas.width = img.naturalHeight;
+                    canvas.height = img.naturalWidth;
+                } else {
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                }
 
-                // Apply filters on canvas
+                ctx.save();
+                ctx.translate(canvas.width / 2, canvas.height / 2);
+                ctx.rotate(rotation * Math.PI / 180);
+                ctx.scale(flipX, flipY);
                 ctx.filter = `
                     brightness(${brightnessInput.value}%) 
                     contrast(${contrastInput.value}%) 
                     saturate(${saturationInput.value}%)
+                    grayscale(${grayscaleInput.value}%)
+                    blur(${blurInput.value}px)
                 `;
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                if (rotation % 180 !== 0) {
+                     ctx.drawImage(img, -img.naturalHeight / 2, -img.naturalWidth / 2);
+                } else {
+                     ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+                }
+               
+                ctx.restore();
 
-                // Create download link
                 const link = document.createElement('a');
                 link.download = 'enhanced-photo.jpg';
                 link.href = canvas.toDataURL('image/jpeg');
@@ -142,4 +238,3 @@
     </script>
 </body>
 </html>
-
