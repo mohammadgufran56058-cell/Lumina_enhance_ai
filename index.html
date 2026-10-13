@@ -20,15 +20,23 @@
             background: #1c2638;
             border-radius: 20px;
         }
-        h1 { color: #70e1b5; }
-        p { color: #c5code; }
-        input[type="file"], label {
+        h1 { color: #70e1b5; margin-bottom: 5px; }
+        h2 { color: #94a3b8; font-size: 16px; margin-top: 0; }
+        p { color: #94a3b8; font-size: 14px; }
+        input[type="file"], label, select {
             width: 100%;
             box-sizing: border-box;
             margin-top: 15px;
             display: block;
             text-align: left;
             font-size: 14px;
+        }
+        select {
+            padding: 10px;
+            border-radius: 8px;
+            background: #101522;
+            color: white;
+            border: 1px solid #334155;
         }
         input[type="range"] {
             width: 100%;
@@ -40,27 +48,18 @@
             background: #70e1b5;
             color: #101522;
             font-weight: bold;
-            font-size: 16px;
-            padding: 14px;
+            font-size: 15px;
+            padding: 12px;
             border-radius: 10px;
-            margin-top: 15px;
+            margin-top: 12px;
             cursor: pointer;
         }
-        .secondary-btn {
-            background: #3b82f6;
-            color: white;
-            margin-top: 10px;
-        }
-        .auto-btn {
-            background: #a855f7;
-            color: white;
-            margin-top: 10px;
-        }
-        .danger-btn {
-            background: #ef4444;
-            color: white;
-            margin-top: 10px;
-        }
+        .secondary-btn { background: #3b82f6; color: white; }
+        .auto-btn { background: #a855f7; color: white; }
+        .compare-btn { background: #f59e0b; color: #101522; }
+        .danger-btn { background: #ef4444; color: white; }
+        .download-btn { background: #4ade80; color: #101522; }
+        
         .group {
             display: flex;
             gap: 10px;
@@ -68,10 +67,22 @@
         .group button {
             width: 50%;
         }
+        
+        .image-container {
+            margin-top: 20px;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        /* Frame Styles */
+        .frame-none { padding: 0; background: transparent; }
+        .frame-white { padding: 12px; background: white; border-radius: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .frame-polaroid { padding: 15px 15px 45px 15px; background: white; border-radius: 4px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); color: #333; font-weight: bold; font-family: monospace; }
+
         img {
             max-width: 100%;
-            margin-top: 20px;
-            border-radius: 12px;
+            display: block;
+            border-radius: 8px;
             transition: transform 0.2s;
         }
     </style>
@@ -79,10 +90,38 @@
 <body>
     <div class="app">
         <h1>Lumina AI ✨</h1>
-        <h2>Photo Enhancer</h2>
-        <p>Upload your photo to get started.</p>
+        <h2>Ultimate Photo Enhancer</h2>
+        <p>Upload, enhance, apply filters & frames!</p>
+        
         <input type="file" id="photo" accept="image/*">
-        <img id="preview" hidden alt="Your photo preview">
+        
+        <div id="imgContainer" class="image-container frame-none" hidden>
+            <img id="preview" alt="Your photo preview">
+        </div>
+        
+        <!-- Compare & Auto Buttons -->
+        <div class="group">
+            <button class="compare-btn" id="compareBtn">Hold to Compare</button>
+            <button class="auto-btn" onclick="autoEnhance()">Auto Enhance ✨</button>
+        </div>
+
+        <!-- Presets -->
+        <label for="presetSelect">Magic Filters / Presets</label>
+        <select id="presetSelect" onchange="applyPreset()">
+            <option value="normal">Normal (Custom)</option>
+            <option value="vintage">Vintage Warm</option>
+            <option value="cinematic">Cinematic Moody</option>
+            <option value="bw">Classic Black & White</option>
+            <option value="punchy">Punchy Pop</option>
+        </select>
+
+        <!-- Frames -->
+        <label for="frameSelect">Photo Frames</label>
+        <select id="frameSelect" onchange="changeFrame()">
+            <option value="none">No Frame</option>
+            <option value="white">Clean White Border</option>
+            <option value="polaroid">Polaroid Style</option>
+        </select>
         
         <label for="brightness">Brightness</label>
         <input type="range" id="brightness" min="0" max="200" value="100">
@@ -102,8 +141,6 @@
         <label for="blur">Blur</label>
         <input type="range" id="blur" min="0" max="10" value="0">
 
-        <button class="auto-btn" onclick="autoEnhance()">Auto Enhance ✨</button>
-
         <div class="group">
             <button class="secondary-btn" onclick="rotateLeft()">Rotate Left</button>
             <button class="secondary-btn" onclick="rotateRight()">Rotate Right</button>
@@ -115,13 +152,14 @@
         </div>
 
         <button class="danger-btn" onclick="resetAll()">Reset Adjustments</button>
-        <button onclick="downloadImage()" style="background: #4ade80; color: #101522;">Download Photo</button>
+        <button class="download-btn" onclick="downloadImage()">Download Photo</button>
         <p id="message"></p>
     </div>
 
     <script>
         const fileInput = document.getElementById('photo');
         const preview = document.getElementById('preview');
+        const imgContainer = document.getElementById('imgContainer');
         const message = document.getElementById('message');
         const brightnessInput = document.getElementById('brightness');
         const contrastInput = document.getElementById('contrast');
@@ -129,6 +167,9 @@
         const sharpenInput = document.getElementById('sharpen');
         const grayscaleInput = document.getElementById('grayscale');
         const blurInput = document.getElementById('blur');
+        const presetSelect = document.getElementById('presetSelect');
+        const frameSelect = document.getElementById('frameSelect');
+        const compareBtn = document.getElementById('compareBtn');
 
         let rotation = 0;
         let flipX = 1;
@@ -136,13 +177,10 @@
 
         function showPhoto() {
             const file = fileInput.files[0];
-            if (!file) {
-                message.textContent = 'Please select a photo first.';
-                return;
-            }
+            if (!file) return;
 
             preview.src = URL.createObjectURL(file);
-            preview.hidden = false;
+            imgContainer.hidden = false;
             resetAll();
             message.textContent = 'Photo loaded successfully!';
         }
@@ -161,6 +199,7 @@
         }
 
         function autoEnhance() {
+            presetSelect.value = 'normal';
             brightnessInput.value = 110;
             contrastInput.value = 125;
             saturationInput.value = 115;
@@ -171,27 +210,42 @@
             message.textContent = 'Auto-enhanced applied!';
         }
 
-        function rotateLeft() {
-            rotation -= 90;
+        function applyPreset() {
+            const val = presetSelect.value;
+            if (val === 'vintage') {
+                brightnessInput.value = 105; contrastInput.value = 115; saturationInput.value = 85; sharpenInput.value = 110; grayscaleInput.value = 0; blurInput.value = 0;
+            } else if (val === 'cinematic') {
+                brightnessInput.value = 95; contrastInput.value = 140; saturationInput.value = 120; sharpenInput.value = 120; grayscaleInput.value = 0; blurInput.value = 0;
+            } else if (val === 'bw') {
+                brightnessInput.value = 105; contrastInput.value = 130; saturationInput.value = 100; sharpenInput.value = 120; grayscaleInput.value = 100; blurInput.value = 0;
+            } else if (val === 'punchy') {
+                brightnessInput.value = 115; contrastInput.value = 150; saturationInput.value = 140; sharpenInput.value = 130; grayscaleInput.value = 0; blurInput.value = 0;
+            }
             updateStyles();
         }
 
-        function rotateRight() {
-            rotation += 90;
-            updateStyles();
+        function changeFrame() {
+            imgContainer.className = `image-container frame-${frameSelect.value}`;
         }
 
-        function flipHorizontal() {
-            flipX *= -1;
-            updateStyles();
-        }
+        // Before / After Compare Listeners
+        const showOriginal = () => { preview.style.filter = 'none'; preview.style.transform = 'none'; };
+        const hideOriginal = () => { updateStyles(); };
 
-        function flipVertical() {
-            flipY *= -1;
-            updateStyles();
-        }
+        compareBtn.addEventListener('mousedown', showOriginal);
+        compareBtn.addEventListener('mouseup', hideOriginal);
+        compareBtn.addEventListener('touchstart', (e) => { e.preventDefault(); showOriginal(); });
+        compareBtn.addEventListener('touchend', (e) => { e.preventDefault(); hideOriginal(); });
+
+        function rotateLeft() { rotation -= 90; updateStyles(); }
+        function rotateRight() { rotation += 90; updateStyles(); }
+        function flipHorizontal() { flipX *= -1; updateStyles(); }
+        function flipVertical() { flipY *= -1; updateStyles(); }
 
         function resetAll() {
+            presetSelect.value = 'normal';
+            frameSelect.value = 'none';
+            imgContainer.className = 'image-container frame-none';
             brightnessInput.value = 100;
             contrastInput.value = 100;
             saturationInput.value = 100;
@@ -204,12 +258,9 @@
             updateStyles();
         }
 
-        brightnessInput.oninput = updateStyles;
-        contrastInput.oninput = updateStyles;
-        saturationInput.oninput = updateStyles;
-        sharpenInput.oninput = updateStyles;
-        grayscaleInput.oninput = updateStyles;
-        blurInput.oninput = updateStyles;
+        [brightnessInput, contrastInput, saturationInput, sharpenInput, grayscaleInput, blurInput].forEach(input => {
+            input.oninput = () => { presetSelect.value = 'normal'; updateStyles(); };
+        });
 
         fileInput.addEventListener('change', showPhoto);
 
@@ -226,18 +277,31 @@
 
             img.src = preview.src;
             img.onload = function() {
+                const hasFrame = frameSelect.value !== 'none';
+                const framePadding = hasFrame ? 40 : 0;
+
+                let w = img.naturalWidth;
+                let h = img.naturalHeight;
+
                 if (rotation % 180 !== 0) {
-                    canvas.width = img.naturalHeight;
-                    canvas.height = img.naturalWidth;
+                    canvas.width = h + framePadding;
+                    canvas.height = w + framePadding;
                 } else {
-                    canvas.width = img.naturalWidth;
-                    canvas.height = img.naturalHeight;
+                    canvas.width = w + framePadding;
+                    canvas.height = h + (frameSelect.value === 'polaroid' ? framePadding + 40 : framePadding);
+                }
+
+                // Draw Frame Background if selected
+                if (hasFrame) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
                 }
 
                 ctx.save();
                 ctx.translate(canvas.width / 2, canvas.height / 2);
                 ctx.rotate(rotation * Math.PI / 180);
                 ctx.scale(flipX, flipY);
+                
                 const sharpenVal = sharpenInput.value;
                 ctx.filter = `
                     brightness(${brightnessInput.value}%) 
@@ -249,15 +313,15 @@
                 `;
                 
                 if (rotation % 180 !== 0) {
-                     ctx.drawImage(img, -img.naturalHeight / 2, -img.naturalWidth / 2);
+                     ctx.drawImage(img, -h / 2, -w / 2);
                 } else {
-                     ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+                     ctx.drawImage(img, -w / 2, -h / 2);
                 }
                
                 ctx.restore();
 
                 const link = document.createElement('a');
-                link.download = 'enhanced-photo.jpg';
+                link.download = 'lumina-enhanced.jpg';
                 link.href = canvas.toDataURL('image/jpeg');
                 link.click();
             }
@@ -267,6 +331,3 @@
 </html>
 
         
-        
-                
-                
